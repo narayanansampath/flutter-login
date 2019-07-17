@@ -1,24 +1,52 @@
 import 'dart:ui';
 
+import 'package:erply_clock_in/models/login_response.dart';
 import 'package:flutter/material.dart';
 import 'package:erply_clock_in/auth.dart';
 import 'package:erply_clock_in/data/database_helper.dart';
 import 'package:erply_clock_in/models/user.dart';
+import 'package:email_validator/email_validator.dart';
 import 'package:erply_clock_in/screens/login/login_screen_presenter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 
 class LoginScreen extends StatefulWidget {
-  LoginScreen();
 
+  //LoginScreen();
   @override
   State<StatefulWidget> createState() {
-    return _LoginScreenState();
+    return new _LoginScreenState();
   }
 }
 
-class _LoginScreenState extends State<LoginScreen> implements LoginScreenContract, AuthStateListener {
+class _LoginScreenState extends State<LoginScreen> implements LoginScreenContract {
 
   BuildContext _ctx;
+
+  bool isLoggedIn = false;
+  String name = '';
+
+  @override
+  void initState() {
+    super.initState();
+    autoLogIn();
+  }
+
+  void autoLogIn() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String userId = prefs.getString('username');
+    print(userId);
+    if (userId != null) {
+      setState(() {
+        isLoggedIn = true;
+        name = userId;
+      });
+      Navigator.of(_ctx).pushReplacementNamed("/home");
+      return;
+    }
+  }
+
 
   bool _isLoading = false;
   final formKey = new GlobalKey<FormState>();
@@ -28,9 +56,9 @@ class _LoginScreenState extends State<LoginScreen> implements LoginScreenContrac
   LoginScreenPresenter _presenter;
 
   _LoginScreenState() {
+
     _presenter = new LoginScreenPresenter(this);
-    var authStateProvider = new AuthStateProvider();
-    authStateProvider.subscribe(this);
+
   }
 
   void _submit() {
@@ -48,12 +76,12 @@ class _LoginScreenState extends State<LoginScreen> implements LoginScreenContrac
         .showSnackBar(new SnackBar(content: new Text(text)));
   }
 
-  @override
+ /* @override
   onAuthStateChanged(AuthState state) {
-
-    if(state == AuthState.LOGGED_IN)
-      Navigator.of(_ctx).pushReplacementNamed("/home");
-  }
+    print("authentication called");
+    if(state == AuthState.LOGGED_IN) {
+      Navigator.of(_ctx).pushReplacementNamed("/home"); }
+  }*/
 
   final color = const Color(0xffF2CE5E);
 
@@ -84,8 +112,8 @@ class _LoginScreenState extends State<LoginScreen> implements LoginScreenContrac
                 child: new TextFormField(
                   onSaved: (val) => _username = val,
                   validator: (val) {
-                    return val.length < 10
-                        ? "Username must have atleast 10 chars"
+                    return !EmailValidator.validate(val, true)
+                        ? "Please enter a valid email"
                         : null;
                   },
                   decoration: InputDecoration(
@@ -97,8 +125,13 @@ class _LoginScreenState extends State<LoginScreen> implements LoginScreenContrac
               new Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: new TextFormField(
-                  onSaved: (val) => _password = val,
                   obscureText: true,
+                  onSaved: (val) => _password = val,
+                  validator: (val) {
+                    return val.length < 1
+                        ? "Please enter password"
+                        : null;
+                  },
                   decoration: InputDecoration(
                       contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
                       hintText: "Password",
@@ -109,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> implements LoginScreenContrac
             ],
           ),
         ),
-        _isLoading ? new CircularProgressIndicator() : loginButon
+        _isLoading ? new CircularProgressIndicator(  backgroundColor: color, valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),) : loginButon
       ],
       crossAxisAlignment: CrossAxisAlignment.center,
     );
@@ -145,18 +178,85 @@ class _LoginScreenState extends State<LoginScreen> implements LoginScreenContrac
 
   @override
   void onLoginError(String errorTxt) {
-    _showSnackBar(errorTxt);
+    //_onHideLoading();
     setState(() => _isLoading = false);
+    _showSnackBar(errorTxt);
+
   }
 
   @override
-  void onLoginSuccess(User user) async {
-    _showSnackBar(user.toString());
+  void onLoginSuccess(LoginResponse response) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() => _isLoading = false);
-    var db = new DatabaseHelper();
-    await db.saveUser(user);
-    var authStateProvider = new AuthStateProvider();
-    authStateProvider.notify(AuthState.LOGGED_IN);
+    // _onHideLoading();
+    _showSnackBar("Login successful!");
+    Navigator.of(_ctx).pushReplacementNamed("/home");
+    setState(() {
+      name = prefs.getString('username');
+      isLoggedIn = true;
+    });
+//    var db = new DatabaseHelper();
+//    await db.saveUser(response);
+//    var authStateProvider = new AuthStateProvider();
+//    authStateProvider.notify(AuthState.LOGGED_IN);
+  }
+  // user defined function
+  void _showDialog(String message) {
+    // flutter defined function
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Alert"),
+          content: new Text("$message"),
+          actions: <Widget>[
+            // usually buttons at the bottom of the dialog
+            new FlatButton(
+              child: new Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _onLoading() {
+    showDialog(
+      context: scaffoldKey.currentState.context,
+      barrierDismissible: false,
+      child: new SimpleDialog(
+        title: Container(
+          child: Center(
+            child: new Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                new CircularProgressIndicator(),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0, bottom: 10.0),
+                  child: new Text("Loading"),
+                ),
+
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onHideLoading() {
+    Navigator.pop(scaffoldKey.currentState.context); //pop dialog
+  }
+
+  Future<bool> getLoginState() async{
+    SharedPreferences pf =  await SharedPreferences.getInstance();
+    bool loginState = pf.getBool('loginState');
+    return loginState;
+    // return pf.commit();
   }
 }
 // return Column(
