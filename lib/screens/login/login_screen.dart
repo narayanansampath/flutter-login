@@ -2,9 +2,6 @@ import 'dart:ui';
 
 import 'package:erply_clock_in/models/login_response.dart';
 import 'package:flutter/material.dart';
-import 'package:erply_clock_in/auth.dart';
-import 'package:erply_clock_in/data/database_helper.dart';
-import 'package:erply_clock_in/models/user.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:erply_clock_in/screens/login/login_screen_presenter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
