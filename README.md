@@ -1,6 +1,8 @@
-# erply_clock_in
+# Flutter Login demo application
 
 A new Flutter application.
+
+## Change the login api url with your specific url
 
 ## Getting Started
 
