@@ -28,10 +28,5 @@ class LoginScreenPresenter {
       _view.onLoginError(e.toString().substring(e.toString().indexOf(":")+1));
 
     }
-  } /*{
-    api.
-      login(username, password)
-      .then((User user) => _view.onLoginSuccess(user))
-      .catchError((onError) => _view.onLoginError(onError.toString()));
-  }*/
+  }
 }
