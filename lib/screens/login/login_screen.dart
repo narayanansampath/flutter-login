@@ -10,7 +10,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
 
-  //LoginScreen();
   @override
   State<StatefulWidget> createState() {
     return new _LoginScreenState();
@@ -72,13 +71,6 @@ class _LoginScreenState extends State<LoginScreen> implements LoginScreenContrac
     scaffoldKey.currentState
         .showSnackBar(new SnackBar(content: new Text(text)));
   }
-
- /* @override
-  onAuthStateChanged(AuthState state) {
-    print("authentication called");
-    if(state == AuthState.LOGGED_IN) {
-      Navigator.of(_ctx).pushReplacementNamed("/home"); }
-  }*/
 
   final color = const Color(0xffF2CE5E);
 
@@ -192,12 +184,8 @@ class _LoginScreenState extends State<LoginScreen> implements LoginScreenContrac
       name = prefs.getString('username');
       isLoggedIn = true;
     });
-//    var db = new DatabaseHelper();
-//    await db.saveUser(response);
-//    var authStateProvider = new AuthStateProvider();
-//    authStateProvider.notify(AuthState.LOGGED_IN);
   }
-  // user defined function
+
   void _showDialog(String message) {
     // flutter defined function
     showDialog(
@@ -256,12 +244,6 @@ class _LoginScreenState extends State<LoginScreen> implements LoginScreenContrac
     // return pf.commit();
   }
 }
-// return Column(
-//   children: <Widget>[
-//   Center( child: Image.asset('assets/homescreen.png')),
-// ]
-// );
-
 
 
 
